@@ -1,0 +1,21 @@
+# Ignore compiled binaries (the ones without extensions)
+BlurDetect
+EdgeDetect
+FIltering
+FreezeDetect
+SilentDetect
+Transcode
+VMAFTest
+VisualErrorDetect
+remux
+
+# Ignore Core Dumps
+core.*
+
+# Ignore the source folders if you keep them locally
+FFmpeg/
+vmaf/
+
+# (Optional) Ignore large video files to stay under GitHub's limits
+# *.mp4
+# *.webm
