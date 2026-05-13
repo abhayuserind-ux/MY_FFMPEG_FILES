@@ -1,21 +1,34 @@
-# Ignore compiled binaries (the ones without extensions)
-BlurDetect
-EdgeDetect
-FIltering
-FreezeDetect
-SilentDetect
-Transcode
-VMAFTest
-VisualErrorDetect
-remux
+# Ignore Video and Media Files
+*.mp4
+*.webm
+*.mkv
+*.pgm
 
-# Ignore Core Dumps
+# Ignore Archives
+*.zip
+
+# Ignore Crash Logs / Core Dumps
 core.*
 
-# Ignore the source folders if you keep them locally
+# Ignore specific compiled C binaries (no extensions)
+AV1_BASIC_ENCODING
+AV1_TUNE_SCREEN_ENCODING*
+AV1ENCODER_BASIC
+AV1_ENCODING_ROI_BASIC
+AV1_SCC
+AV1_TUNE1_NOSCC_H264_ENCODE
+AV1_TUNE2_SCC_LIBSVTAV1_ENCODE
+BlurDetect
+EdgeDetect
+EXTRA
+FIltering
+FreezeDetect
+HelloWorld
+remux
+SilentDetect
+Transcode
+VisualErrorDetect
+VMAFTest
+ffmpeg_frame_viewer
+vmaf
 FFmpeg/
-vmaf/
-
-# (Optional) Ignore large video files to stay under GitHub's limits
-# *.mp4
-# *.webm

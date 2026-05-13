@@ -8,7 +8,8 @@
 #include <libavutil/avstring.h>
 #include <libavutil/opt.h>
 
-const char *in_file = "Blur_Input.mp4";
+const char *in_file = "Blur_Detect.mp4";
+const char *out_pgm = "current_edge_frame.pgm";
 
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *dec_ctx = NULL;
@@ -79,11 +80,8 @@ static int init_filter(void)
     inputs->filter_ctx  = buffersink_ctx;
     inputs->pad_idx     = 0;
     inputs->next        = NULL;
-
-    /* Keep setparams to avoid the "reserved" metadata crash.
-       Edgedetect thresholds: low=0.1, high=0.4
-    */
-    const char *filter_descr = "setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709,edgedetect=low=0.1:high=0.4";
+    
+    const char *filter_descr = "setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709,edgedetect=low=0.001:high=0.01,format=gray";
     
     ret = avfilter_graph_parse_ptr(filter_graph, filter_descr, &inputs, &outputs, NULL);
     if (ret < 0) goto end;
@@ -96,30 +94,22 @@ end:
     return ret;
 }
 
-static void save_pgm_frame(AVFrame *frame, int frame_num)
+static void save_pgm_and_pause(AVFrame *frame, int frame_num)
 {
-    char filename[64];
-    // This creates files like frame_0000.pgm, frame_0001.pgm, etc.
-    snprintf(filename, sizeof(filename), "frame_%04d.pgm", frame_num);
-
-    FILE *f = fopen(filename, "wb");
-    if (!f) {
-        fprintf(stderr, "Could not open %s for writing\n", filename);
-        return;
-    }
-
-    // Header for PGM (Binary P5)
+    FILE *f = fopen(out_pgm, "wb");
+    if (!f) return;
     fprintf(f, "P5\n%d %d\n255\n", frame->width, frame->height);
 
-    // Write the Luma (Y) plane row by row
     for (int i = 0; i < frame->height; i++) {
         fwrite(frame->data[0] + i * frame->linesize[0], 1, frame->width, f);
     }
     fclose(f);
 
-    if (frame_num % 10 == 0) {
-        printf("Saved %s\n", filename);
-    }
+    printf("--- Frame %d ---\n", frame_num);
+    printf("Saved to: %s\n", out_pgm);
+    printf("Press [ENTER] to see the next frame...");
+    
+    getchar(); 
 }
 
 int main(void)
@@ -132,8 +122,6 @@ int main(void)
 
     if (open_input_file(in_file) < 0) return 1;
     if (init_filter() < 0) return 1;
-
-    printf("Starting edge detection export. Please wait...\n");
 
     while (av_read_frame(fmt_ctx, packet) >= 0) {
         if (packet->stream_index == video_stream_index) {
@@ -150,8 +138,7 @@ int main(void)
                     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
                     if (ret < 0) exit(1);
 
-                    // Logic: Save and move immediately to the next frame
-                    save_pgm_frame(filt_frame, frame_count++);
+                    save_pgm_and_pause(filt_frame, frame_count++);
                     av_frame_unref(filt_frame);
                 }
                 av_frame_unref(frame);
@@ -159,19 +146,6 @@ int main(void)
         }
         av_packet_unref(packet);
     }
-
-    /* Flush filters and decoder */
-    avcodec_send_packet(dec_ctx, NULL);
-    while (avcodec_receive_frame(dec_ctx, frame) >= 0) {
-        av_buffersrc_add_frame_flags(buffersrc_ctx, frame, AV_BUFFERSRC_FLAG_KEEP_REF);
-        av_frame_unref(frame);
-        while (av_buffersink_get_frame(buffersink_ctx, filt_frame) >= 0) {
-            save_pgm_frame(filt_frame, frame_count++);
-            av_frame_unref(filt_frame);
-        }
-    }
-
-    // Cleanup
     avfilter_graph_free(&filter_graph);
     avcodec_free_context(&dec_ctx);
     avformat_close_input(&fmt_ctx);
@@ -179,6 +153,6 @@ int main(void)
     av_frame_free(&filt_frame);
     av_packet_free(&packet);
 
-    printf("\nFinished! Exported %d frames.\n", frame_count);
+    printf("\nProcessing finished.\n");
     return 0;
 }

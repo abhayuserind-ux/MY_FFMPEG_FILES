@@ -10,8 +10,8 @@
 #include <libavutil/mem.h>
 #include <libavutil/opt.h>
 
-const char *in = "blur_detect_sigma.webm";
-const double BLUR_THRESH = 15.0;
+const char *in = "Blur_Input.mp4";
+const double BLUR_THRESH = 5.0;
 
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *dec_ctx = NULL;

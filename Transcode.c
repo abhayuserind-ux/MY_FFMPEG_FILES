@@ -55,8 +55,8 @@ int main() {
                 //PIXEL FORMAT, FOR SETTING THE PIXEL FORMAT SAME AS THE INPUT STREAM , PIX_FMTS[0] MEANS THAT THERE IS A LIST OF SUPPOSRTED PIXEL FORMATS IN INPUT WE NEED TO USE THE FIRST ONE TO ENCODE.
             enc_ctx->pix_fmt = encoder->pix_fmts[0];
                 //ECODE THE TIME BASE AND FRAMERATE AS 1/30 AND 30FPS, RESPECTIVELY
-            enc_ctx->time_base = (AVRational){1, 25};
-            enc_ctx->framerate = (AVRational){25, 1};
+            enc_ctx->framerate = av_guess_frame_rate(i, is, NULL);
+            enc_ctx->time_base = is->time_base;
                 //DOUBTS REGARDING THE CONVERSION OF TIME_BASE AND FRAMERATE
 
 
